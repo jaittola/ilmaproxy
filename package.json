@@ -1,0 +1,17 @@
+{
+  "name": "observation-proxy",
+  "version": "0.0.1",
+  "description": "Proxy for querying weather observations from FMI's (www.fmi.fi) open data service",
+  "main": "observation-proxy.js",
+  "scripts": {
+    "start": "node observation-proxy.js"
+  },
+  "author": "Jukka Aittola <jaittola@iki.fi>",
+  "license": "ISC",
+  "dependencies": {
+    "elementtree": "^0.1.6",
+    "express": "^4.13.1",
+    "lodash": "^3.10.0",
+    "request": "^2.60.0"
+  }
+}
