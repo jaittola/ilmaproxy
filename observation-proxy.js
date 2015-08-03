@@ -28,11 +28,19 @@ function parseObservationBody(body) {
   var etree = et.parse(body);
 
   // var stations = parsePositions(etree.findall(stationCoordinatePath));
-  var positionTimeValues = parsePositionTimeString(etree.findall(positionsPath)[0].text);
-  var observations = parseObservationString(etree.findall(observationsPath)[0].text);
+  var positions = etree.findall(positionsPath)
+  var observations = etree.findall(observationsPath)
+
+  if (!positions || !positions.length ||
+      !observations || !observations.length) {
+    return {}
+  }
+
+  var positionTimeValues = parsePositionTimeString(positions[0].text);
+  var observationValues = parseObservationString(observations[0].text);
 
   var combined = _.chain([])
-    .merge(positionTimeValues, observations)
+    .merge(positionTimeValues, observationValues)
     .groupBy(function(observation) {
       return observation.lat + "," + observation.long ;
     })
