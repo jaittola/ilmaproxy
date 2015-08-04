@@ -19,7 +19,7 @@ var queryBase = "http://data.fmi.fi/fmi-apikey/" + apikey + "/wfs?request=getFea
   "storedquery_id=fmi::observations::weather::multipointcoverage&" +
   "parameters=ws_10min,wg_10min,wd_10min,t2m,rh,r_1h,vis,n_man&";
 
-var stationCoordinatePath = "wfs:member/omso:GridSeriesObservation/om:featureOfInterest/sams:SF_SpatialSamplingFeature/sams:shape/gml:MultiPoint/gml:pointMember/gml:Point/gml:pos";
+var stationCoordinatePath = "wfs:member/omso:GridSeriesObservation/om:featureOfInterest/sams:SF_SpatialSamplingFeature/sams:shape/gml:MultiPoint/gml:pointMember/gml:Point";  // "/gml:pos";
 var positionsPath = "wfs:member/omso:GridSeriesObservation/om:result/gmlcov:MultiPointCoverage/gml:domainSet/gmlcov:SimpleMultiPoint/gmlcov:positions";
 var observationsPath = "wfs:member/omso:GridSeriesObservation/om:result/gmlcov:MultiPointCoverage/gml:rangeSet/gml:DataBlock/gml:doubleOrNilReasonTupleList";
 
@@ -27,22 +27,28 @@ var observationsPath = "wfs:member/omso:GridSeriesObservation/om:result/gmlcov:M
 function parseObservationBody(body) {
   var etree = et.parse(body);
 
-  // var stations = parsePositions(etree.findall(stationCoordinatePath));
-  var positions = etree.findall(positionsPath)
-  var observations = etree.findall(observationsPath)
+  var stations = etree.findall(stationCoordinatePath);
+  var positions = etree.findall(positionsPath);
+  var observations = etree.findall(observationsPath);
 
   if (!positions || !positions.length ||
       !observations || !observations.length) {
     return {}
   }
 
+  var stationValues = parsePositions(stations);
   var positionTimeValues = parsePositionTimeString(positions[0].text);
   var observationValues = parseObservationString(observations[0].text);
 
   var combined = _.chain([])
     .merge(positionTimeValues, observationValues)
+    .map(function(observation) {
+      observation.coordString = observation.lat + "," + observation.long;
+      observation.stationName = stationValues[observation.coordString] || ""
+      return observation;
+    })
     .groupBy(function(observation) {
-      return observation.lat + "," + observation.long ;
+      return observation.coordString;
     })
     .mapValues(function(array) { return _.sortBy(array, 'time'); })
     .value();
@@ -53,8 +59,14 @@ function parseObservationBody(body) {
 }
 
 function parsePositions(positions) {
-  var values = _.pluck(positions, "text");
-  console.log("Position values: ", values);
+  var values = positions.reduce(function(result, pos) {
+    var coordinates = (pos.find("gml:pos").text || "").trim().replace(/ /, ",");
+    var name = (pos.find("gml:name").text || "").trim();
+    result[coordinates] = name;
+    return result;
+  }, {});
+
+  return values || {}
 }
 
 function parsePositionTimeString(positionTimeRows) {
