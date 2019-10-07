@@ -5,17 +5,11 @@ var app = require('express')();
 var http = require('http').Server(app);
 var request = require('request');
 
-var apikey = process.env.OBSP_APIKEY
-if (!apikey) {
-  console.log("API key not set, cannot start");
-  process.exit(1);
-}
-
 var port = process.env.PORT || 4001;
 
 var cache = {};
 
-var queryBase = "http://data.fmi.fi/fmi-apikey/" + apikey + "/wfs?request=getFeature&" +
+var queryBase = "http://opendata.fmi.fi/wfs?request=getFeature&" +
   "storedquery_id=fmi::observations::weather::multipointcoverage&" +
   "parameters=ws_10min,wg_10min,wd_10min,t2m,rh,r_1h,vis,n_man&";
 
