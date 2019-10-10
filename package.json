@@ -4,7 +4,8 @@
   "description": "Proxy for querying weather observations from FMI's (www.fmi.fi) open data service",
   "main": "observation-proxy.js",
   "scripts": {
-    "start": "node observation-proxy.js"
+    "start": "node observation-proxy.js",
+    "dev": "nodemon observation-proxy.js"
   },
   "author": "Jukka Aittola <jaittola@iki.fi>",
   "license": "ISC",
@@ -13,5 +14,8 @@
     "express": "^4.17.1",
     "lodash": "^4.17.15",
     "request": "^2.88.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.3"
   }
 }
