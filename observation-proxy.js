@@ -17,6 +17,25 @@ var stationCoordinatePath = "wfs:member/omso:GridSeriesObservation/om:featureOfI
 var positionsPath = "wfs:member/omso:GridSeriesObservation/om:result/gmlcov:MultiPointCoverage/gml:domainSet/gmlcov:SimpleMultiPoint/gmlcov:positions";
 var observationsPath = "wfs:member/omso:GridSeriesObservation/om:result/gmlcov:MultiPointCoverage/gml:rangeSet/gml:DataBlock/gml:doubleOrNilReasonTupleList";
 
+function addStationMetadata(stationValues, observation) {
+  observation.coordString = observation.lat + "," + observation.long;
+  observation.stationName = stationValues[observation.coordString] || "";
+  return observation;
+}
+
+function filterNaNValues(observation) {
+  return _.pickBy(observation, function(value, key) {
+    return String(value) != "NaN";
+  });
+}
+
+function hasNonNaNMeasurements(observation) {
+  return _.chain(observation)
+    .keys()
+    .difference(['lat', 'long', 'time'])
+    .size()
+    .value() != 0
+}
 
 function parseObservationBody(body) {
   var etree = et.parse(body);
@@ -36,10 +55,10 @@ function parseObservationBody(body) {
 
   var combined = _.chain([])
     .merge(positionTimeValues, observationValues)
+    .map(filterNaNValues)
+    .filter(hasNonNaNMeasurements)
     .map(function(observation) {
-      observation.coordString = observation.lat + "," + observation.long;
-      observation.stationName = stationValues[observation.coordString] || ""
-      return observation;
+      return addStationMetadata(stationValues, observation);
     })
     .groupBy(function(observation) {
       return observation.coordString;
