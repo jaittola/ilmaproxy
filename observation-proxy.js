@@ -133,7 +133,7 @@ function isGoodCoordinate(coordinate) {
   if (coordinate &&
       String(coordinate).match(/^\d{1,3}(\.\d{1,7})?$/)) {
     var numCoordinate = parseFloat(coordinate);
-    if (numCoordinate > 20 && numCoordinate < 70) {
+    if (numCoordinate > 15 && numCoordinate < 70) {
       return true;
     }
   }
