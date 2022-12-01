@@ -63,12 +63,12 @@ function parseObservationBody(body) {
     .groupBy(function(observation) {
       return observation.coordString;
     })
-    .mapValues(function(array) { return _.sortBy(array, 'time'); })
+    .mapValues(function(array) { return _.orderBy(array, 'time', 'desc'); })
     .value();
 
   // console.log("Combined: " + JSON.stringify(combined, null, 2));
 
-  return combined;
+    return { observations: combined }
 }
 
 function parsePositions(positions) {
@@ -110,16 +110,18 @@ function splitRows(stringWithRows) {
     return stringWithRows.match(/[^\r\n]+/g);
 }
 
+const MINUTE = 60000;
+
 function setupQuery(base,
                     lat1, lon1,
                     lat2, lon2) {
-  var timeNow = Date.now();
+  const timeNow = Date.now();
   var urlData = { };
   urlData.boundingBox = [lon1, lat1, lon2, lat2].join(",");
   urlData.url = base +
     "bbox=" + urlData.boundingBox + "&" +
     "timestep=10&" +
-    "starttime=" + formatTime(timeNow - 2 * 3600000)  + "&" +
+    "starttime=" + formatTime(timeNow - 20 * MINUTE)  + "&" +
     "endtime=" + formatTime(timeNow);
   return urlData;
 }
@@ -151,9 +153,9 @@ app.get("/1/observations", function(req, res) {
                            query.lat1, query.lon1,
                            query.lat2, query.lon2);
 
-  var cachedData = cache[urlData.boundingBox];
+  const cachedData = cache[urlData.boundingBox];
   if (cachedData &&
-      cachedData.date > Date.now() - 10 * 60000) {
+      cachedData.date > Date.now() - 10 * MINUTE) {
     // Found in cache.
     console.log("Replying with cached data.");
     res.send(cachedData.data);
