@@ -3,7 +3,8 @@ var et = require('elementtree');
 var _ = require('lodash');
 var app = require('express')();
 var http = require('http').Server(app);
-var request = require('request');
+
+const fetch = require('node-fetch');
 
 var port = process.env.PORT || 4001;
 
@@ -142,7 +143,7 @@ function isGoodCoordinate(coordinate) {
   return false;
 }
 
-app.get("/1/observations", function(req, res) {
+app.get("/1/observations", async (req, res) => {
   var query = req.query;
   if ( ![ query.lat1, query.lat2, query.lon1, query.lon2].every(isGoodCoordinate)) {
     res.status(400).end();
@@ -164,20 +165,22 @@ app.get("/1/observations", function(req, res) {
 
   console.log("Sending request to ", urlData.url);
 
-  request(urlData.url, function(error, response, body) {
-    if (error || response.statusCode !== 200) {
-      console.log("Request to FMI failed: ", error, response.statusCode, body);
-      res.status(response.statusCode).end();
-      return;
-    }
+  try {
+    const fetchRequest = await fetch(urlData.url)
+    const body = await fetchRequest.text();
 
     var parsedData = parseObservationBody(body);
+
     cache[urlData.boundingBox] = {
       date: Date.now(),
       data: parsedData
     };
+
     res.send(parsedData);
-  });
+  } catch (error) {
+    console.log("Request to FMI failed", error);
+    res.status(400).end()
+  }
 });
 
 http.listen(port);
