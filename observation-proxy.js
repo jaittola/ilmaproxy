@@ -10,9 +10,9 @@ var port = process.env.PORT || 4001;
 
 var cache = {};
 
-var queryBase = "http://opendata.fmi.fi/wfs?request=getFeature&" +
+var queryBase = "https://opendata.fmi.fi/wfs?request=getFeature&" +
   "storedquery_id=fmi::observations::weather::multipointcoverage&" +
-  "parameters=ws_10min,wg_10min,wd_10min,t2m,rh,r_1h,vis,n_man&";
+  "parameters=ws_10min,wg_10min,wd_10min,t2m,rh,ri_10min,vis,n_man&";
 
 var stationCoordinatePath = "wfs:member/omso:GridSeriesObservation/om:featureOfInterest/sams:SF_SpatialSamplingFeature/sams:shape/gml:MultiPoint/gml:pointMember/gml:Point";  // "/gml:pos";
 var positionsPath = "wfs:member/omso:GridSeriesObservation/om:result/gmlcov:MultiPointCoverage/gml:domainSet/gmlcov:SimpleMultiPoint/gmlcov:positions";
@@ -89,11 +89,14 @@ function parsePositionTimeString(positionTimeRows) {
 
 function parseObservationString(observationRows) {
   return mapToObject(splitRows(observationRows),
-                        [ 'windSpeed', 'windSpeedGust', 'windDirection',
-                          'airTemperature', 'relativeHumidity',
-                          'precipitationAmount',
-                          'visibility',
-                          'amountOfCloud' ]);
+                     [ 'windSpeed',
+                       'windSpeedGust',
+                       'windDirection',
+                       'airTemperature',
+                       'relativeHumidity',
+                       'precipitationAmount',
+                       'visibility',
+                       'amountOfCloud' ]);
 }
 
 function mapToObject(rows, expectedFields) {
