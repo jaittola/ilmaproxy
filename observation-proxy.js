@@ -116,13 +116,12 @@ function splitRows(stringWithRows) {
 
 const MINUTE = 60000;
 
-function setupQuery(base,
-                    lat1, lon1,
+function setupQuery(lat1, lon1,
                     lat2, lon2) {
   const timeNow = Date.now();
   var urlData = { };
   urlData.boundingBox = [lon1, lat1, lon2, lat2].join(",");
-  urlData.url = base +
+  urlData.url = queryBase +
     "bbox=" + urlData.boundingBox + "&" +
     "timestep=10&" +
     "starttime=" + formatTime(timeNow - 20 * MINUTE)  + "&" +
@@ -146,16 +145,8 @@ function isGoodCoordinate(coordinate) {
   return false;
 }
 
-app.get("/1/observations", async (req, res) => {
-  var query = req.query;
-  if ( ![ query.lat1, query.lat2, query.lon1, query.lon2].every(isGoodCoordinate)) {
-    res.status(400).end();
-    return;
-  }
-
-  var urlData = setupQuery(queryBase,
-                           query.lat1, query.lon1,
-                           query.lat2, query.lon2);
+async function performWeatherQuery(req, res, lat1, lat2, lon1, lon2) {
+  var urlData = setupQuery(lat1, lon1, lat2, lon2);
 
   const cachedData = cache[urlData.boundingBox];
   if (cachedData &&
@@ -184,6 +175,21 @@ app.get("/1/observations", async (req, res) => {
     console.log("Request to FMI failed", error);
     res.status(400).end()
   }
+}
+
+app.get("/1/observations", async (req, res) => {
+  var query = req.query;
+  if ( ![ query.lat1, query.lat2, query.lon1, query.lon2].every(isGoodCoordinate)) {
+    res.status(400).end();
+    return;
+  }
+
+  await performWeatherQuery(req, res, query.lat1, auery.lat2, query.lon1, query.lon2);
+});
+
+
+app.get("/1/southfinland", async (req, res) => {
+  await performWeatherQuery(req, res, 59.570, 63, 21.614, 29.6)
 });
 
 http.listen(port);
